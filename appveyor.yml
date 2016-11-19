@@ -1,18 +1,20 @@
 # See http://www.appveyor.com/docs/appveyor-yml for many more options
 
+#Publish to PowerShell Gallery with this key
+environment:
+  NuGetApiKey:
+    secure: 7R4JfjlMmsBGGjG9l6q7ygkxW7rhWrRpmoXQ4DC0WR8JxfLSX4Y2HJC4OkF9Y/Lc
+
 # Allow WMF5 (i.e. PowerShellGallery functionality)
-os: Unstable
+os: WMF 5
 
 # Skip on updates to the readme.
 # We can force this by adding [skip ci] or [ci skip] anywhere in commit message 
 skip_commits:
-  message: /updated readme.*/
-
-install:
-  - cinst pester -y
+  message: /updated readme.*|update readme.*s/
 
 build: false
 
+#Kick off the CI/CD pipeline
 test_script:
-# Test with native PS version
-  - ps: . .\Tests\appveyor.pester.ps1 -Test -Finalize
+  - ps: . .\Build.ps1
