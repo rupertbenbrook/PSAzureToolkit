@@ -5,7 +5,11 @@ function Get-AzureRmStorageContextFromAccountName {
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
         [Alias("StorageAccount", "Name")]
-        [string]$StorageAccountName
+        [string]$StorageAccountName,
+
+        [Parameter(ValueFromPipelineByPropertyName)]
+        [Alias("Secondary")]
+        [switch]$SecondaryEndpoints = $false
     )
 
     process {
@@ -16,10 +20,15 @@ function Get-AzureRmStorageContextFromAccountName {
             return $null
         }
 
-
         Write-Verbose "Getting storage account key for storage account '$StorageAccountName'"
         $key = Get-AzureRmStorageAccountKey -ResourceGroupName $account.ResourceGroupName -Name $StorageAccountName
 
-        return New-AzureStorageContext -StorageAccountName $StorageAccountName -StorageAccountKey $key.Value[0]
+        $secondary = ""
+        if ($SecondaryEndpoints) {
+            Write-Verbose "Using secondary endpoints for storage account '$StorageAccountName'"
+            $secondary = "-secondary"
+        }
+        $connectionString = "DefaultEndpointsProtocol=https;AccountName=$StorageAccountName;AccountKey=$($key.Value[0]);BlobEndpoint=https://$StorageAccountName$secondary.blob.core.windows.net;FileEndpoint=https://$StorageAccountName$secondary.file.core.windows.net;QueueEndpoint=https://$StorageAccountName$secondary.queue.core.windows.net;TableEndpoint=https://$StorageAccountName$secondary.table.core.windows.net;"
+        return New-AzureStorageContext -ConnectionString $connectionString
     }
 }
