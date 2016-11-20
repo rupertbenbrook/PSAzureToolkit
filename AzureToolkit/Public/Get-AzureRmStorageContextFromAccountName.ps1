@@ -20,7 +20,9 @@ function Get-AzureRmStorageContextFromAccountName {
             return $null
         }
 
-        # Add check for account type (RA-GRS) if accessing secondary endpoints
+        if ($SecondaryEndpoints -and ($account.Sku.name -ne "Standard_RAGRS")) {
+            throw "The storage account '$StorageAccountName' has the Sku '$($account.Sku.name)' and so does not have secondary endpoints"
+        }
 
         Write-Verbose "Getting storage account key for storage account '$StorageAccountName'"
         $key = Get-AzureRmStorageAccountKey -ResourceGroupName $account.ResourceGroupName -Name $StorageAccountName
