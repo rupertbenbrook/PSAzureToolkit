@@ -20,6 +20,8 @@ function Get-AzureRmStorageContextFromAccountName {
             return $null
         }
 
+        # Add check for account type (RA-GRS) if accessing secondary endpoints
+
         Write-Verbose "Getting storage account key for storage account '$StorageAccountName'"
         $key = Get-AzureRmStorageAccountKey -ResourceGroupName $account.ResourceGroupName -Name $StorageAccountName
 
