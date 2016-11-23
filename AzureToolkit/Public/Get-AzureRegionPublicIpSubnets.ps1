@@ -17,19 +17,19 @@ function Get-AzureRegionPublicIpSubnets {
         ($regionSubnetsCache -ne $null) -and
         ($now.Subtract($regionSubnetsCacheTime).TotalMinutes -lt 60)) {
         
-        Write-Verbose "Returning result from cache that was cached at $regionSubnetsCacheTime"
+        Write-Verbose "Returning result from cache"
         return $regionSubnetsCache
     }
 
     Write-Verbose "Downloading the Azure Datacenter IP ranges download confirmation page to find the latest XML file download"
     $downloadPage = Invoke-WebRequest -Uri "https://www.microsoft.com/download/confirmation.aspx?id=41653" -UseBasicParsing
-    $xmlUriFound = $downloadPage.RawContent -cmatch "https://[\w\n-/]+/PublicIPs_\d+\.xml"
-    if (-not $xmlFileUri) {
+    $xmlUriFound = $downloadPage.Content -cmatch "https://[\w\n-/]+/PublicIPs_\d+\.xml"
+    if (-not $xmlUriFound) {
         throw "Cannot find the Azure Public IP ranges XML download Uri in the download confirmation page"
     }
-
-    Write-Verbose "Downloading the Azure Public IP ranges XML from '$xmlFileUri'"
     $xmlFileUri = [string]$matches.Values[0]
+
+    Write-Verbose "Downloading the Azure Public IP ranges XML from $xmlFileUri"
     $response = Invoke-WebRequest -Uri $xmlFileUri -UseBasicParsing
     [xml]$xmlResponse = [System.Text.Encoding]::UTF8.GetString($response.Content)
     $regionSubnets = $xmlResponse.AzurePublicIpAddresses.Region | %{
