@@ -5,9 +5,12 @@ function Get-AzureRegionPublicIpSubnets {
         [switch]$RefreshCache = $false
     )
 
+    $cacheName = "regionSubnetsCache"
+    $cacheTimeName = "regionSubnetsCacheTime"
+
     $now = Get-Date
-    $regionSubnetsCache = $PSCmdlet.SessionState.PSVariable.Get("regionSubnetsCache").Value
-    $regionSubnetsCacheTime = $PSCmdlet.SessionState.PSVariable.Get("regionSubnetsCacheTime").Value
+    $regionSubnetsCache = $PSCmdlet.SessionState.PSVariable.Get($cacheName).Value
+    $regionSubnetsCacheTime = $PSCmdlet.SessionState.PSVariable.Get($cacheTimeName).Value
     Write-Verbose "Last cached result was cached at $regionSubnetsCacheTime"
     if (($RefreshCache -eq $false) -and
         ($regionSubnetsCacheTime -ne $null) -and
@@ -33,7 +36,7 @@ function Get-AzureRegionPublicIpSubnets {
         New-Object -TypeName PSObject -Property @{Region=$_.Name; Subnets=$_.IpRange.Subnet }
     }
 
-    $PSCmdlet.SessionState.PSVariable.Set("regionSubnetsCache", $regionSubnets)
-    $PSCmdlet.SessionState.PSVariable.Set("regionSubnetsCacheTime", $now)
+    $PSCmdlet.SessionState.PSVariable.Set($cacheName, $regionSubnets)
+    $PSCmdlet.SessionState.PSVariable.Set($cacheTimeName, $now)
     return $regionSubnets
 }
