@@ -5,13 +5,11 @@ function Get-AzureRegionPublicIpSubnets {
         [switch]$RefreshCache = $false
     )
 
-    $cacheName = "regionSubnetsCache"
-    $cacheTimeName = "regionSubnetsCacheTime"
-
+    $timeout = 10
     $now = Get-Date
-    $regionSubnetsCache = $PSCmdlet.SessionState.PSVariable.Get($cacheName).Value
-    $regionSubnetsCacheTime = $PSCmdlet.SessionState.PSVariable.Get($cacheTimeName).Value
-    Write-Verbose "Last cached result was cached at $regionSubnetsCacheTime"
+    $regionSubnetsCache = $global:regionSubnetsCache
+    $regionSubnetsCacheTime = $global:regionSubnetsCacheTime
+    Write-Verbose "Last cached result was cached at $regionSubnetsCacheTime - refresh cache: $RefreshCache"
     if (($RefreshCache -eq $false) -and
         ($regionSubnetsCacheTime -ne $null) -and
         ($regionSubnetsCache -ne $null) -and
@@ -22,7 +20,7 @@ function Get-AzureRegionPublicIpSubnets {
     }
 
     Write-Verbose "Downloading the Azure Datacenter IP ranges download confirmation page to find the latest XML file download"
-    $downloadPage = Invoke-WebRequest -Uri "https://www.microsoft.com/download/confirmation.aspx?id=41653" -UseBasicParsing
+    $downloadPage = Invoke-WebRequest -Uri "https://www.microsoft.com/download/confirmation.aspx?id=41653" -UseBasicParsing -TimeoutSec $timeout
     $xmlUriFound = $downloadPage.Content -cmatch "https://[\w\n-/]+/PublicIPs_\d+\.xml"
     if (-not $xmlUriFound) {
         throw "Cannot find the Azure Public IP ranges XML download Uri in the download confirmation page"
@@ -30,13 +28,13 @@ function Get-AzureRegionPublicIpSubnets {
     $xmlFileUri = [string]$matches.Values[0]
 
     Write-Verbose "Downloading the Azure Public IP ranges XML from $xmlFileUri"
-    $response = Invoke-WebRequest -Uri $xmlFileUri -UseBasicParsing
+    $response = Invoke-WebRequest -Uri $xmlFileUri -UseBasicParsing -TimeoutSec $timeout
     [xml]$xmlResponse = [System.Text.Encoding]::UTF8.GetString($response.Content)
     $regionSubnets = $xmlResponse.AzurePublicIpAddresses.Region | %{
         New-Object -TypeName PSObject -Property @{Region=$_.Name; Subnets=$_.IpRange.Subnet }
     }
 
-    $PSCmdlet.SessionState.PSVariable.Set($cacheName, $regionSubnets)
-    $PSCmdlet.SessionState.PSVariable.Set($cacheTimeName, $now)
+    Set-Variable -Name "regionSubnetsCache" -Scope Global -Visibility Private -Value $regionSubnets
+    Set-Variable -Name "regionSubnetsCacheTime" -Scope Global -Visibility Private -Value $now
     return $regionSubnets
 }
