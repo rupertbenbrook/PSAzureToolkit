@@ -1,4 +1,4 @@
-Import-Module $PSScriptRoot\..\AzureToolkit -Force
+Import-Module $PSScriptRoot\..\PSAzureToolkit -Force
 
 Describe "Get-AzureRmStorageContextFromAccountName" {
     Context "Null parameter provided" {
