@@ -33,9 +33,11 @@ function Add-AzureRmNetworkSecurityRuleConfigForRegionPublicIpSubnets {
         [string]$Protocol,
 
         [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
         [string]$Port,
 
         [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
         [string]$Subnet
     )
 
